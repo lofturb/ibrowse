@@ -73,6 +73,13 @@ en `/var/mobile/Media`.
 
 ## Instalar en el iPad
 
+Descarga el IPA ya compilado desde
+[**Releases → último build**](https://github.com/lofturb/ibrowse/releases/latest):
+
+```text
+https://github.com/lofturb/ibrowse/releases/latest/download/com.lofturb.ibrowse_1.0.0.ipa
+```
+
 Con el iPad conectado por USB y `ideviceinstaller` en el PC:
 
 ```bash

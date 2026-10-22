@@ -195,7 +195,7 @@ def main():
             problemas.append("la version minima es %s" % ", ".join(minimos))
         if not cab["firmado"]:
             problemas.append("no lleva firma (necesita AppSync Unified al instalar)")
-        if info and info.get("CFBundleIdentifier") != "com.lofturb.itwitch":
+        if info and info.get("CFBundleIdentifier") != "com.lofturb.ibrowse":
             problemas.append("el bundle ID es %r" % info.get("CFBundleIdentifier"))
 
         if problemas:
