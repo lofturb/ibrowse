@@ -29,7 +29,7 @@ static const CGFloat IBKButtonWidth = 42.0;
 @property (nonatomic, strong) UIView *chrome;
 @property (nonatomic, strong) UIView *tabBar;
 @property (nonatomic, strong) UIScrollView *tabScrollView;
-@property (nonatomic, strong) UIButton *newTabButton;
+@property (nonatomic, strong) UIButton *addTabButton;
 @property (nonatomic, strong) UIView *addressRow;
 @property (nonatomic, strong) UIButton *backButton;
 @property (nonatomic, strong) UIButton *forwardButton;
@@ -124,7 +124,7 @@ static const CGFloat IBKButtonWidth = 42.0;
 
     CGFloat addWidth = 42.0;
     self.tabScrollView.frame = CGRectMake(6, 4, width - addWidth - 8, tabHeight - 8);
-    self.newTabButton.frame = CGRectMake(width - addWidth - 2, top + 1, addWidth, tabHeight - 2);
+    self.addTabButton.frame = CGRectMake(width - addWidth - 2, top + 1, addWidth, tabHeight - 2);
 
     self.addressRow.frame = CGRectMake(0, top + tabHeight, width, addressHeight);
 
@@ -205,13 +205,13 @@ static const CGFloat IBKButtonWidth = 42.0;
     self.tabScrollView.backgroundColor = [UIColor clearColor];
     [self.tabBar addSubview:self.tabScrollView];
 
-    self.newTabButton = [self chromeButtonWithTitle:@"+"
+    self.addTabButton = [self chromeButtonWithTitle:@"+"
                                               size:24.0];
-    self.newTabButton.accessibilityLabel = @"Nueva pestaña";
-    [self.newTabButton addTarget:self
+    self.addTabButton.accessibilityLabel = @"Nueva pestaña";
+    [self.addTabButton addTarget:self
                           action:@selector(newTabTapped)
                 forControlEvents:UIControlEventTouchUpInside];
-    [self.tabBar addSubview:self.newTabButton];
+    [self.tabBar addSubview:self.addTabButton];
 
     self.addressRow = [[UIView alloc] initWithFrame:CGRectZero];
     self.addressRow.backgroundColor = [IBTheme chrome];
@@ -971,7 +971,7 @@ static const CGFloat IBKButtonWidth = 42.0;
     self.currentIndex = MIN(MAX(0, selected), (NSInteger)self.tabs.count - 1);
     for (NSUInteger i = 0; i < self.tabs.count; i++) {
         if ((NSInteger)i != self.currentIndex) {
-            [self.tabs[i] unload];
+            [(IBWebTab *)self.tabs[i] unload];
         }
     }
     [self attachCurrentTab];
@@ -1031,7 +1031,7 @@ static const CGFloat IBKButtonWidth = 42.0;
     self.currentIndex = MIN(MAX(0, selected), (NSInteger)self.tabs.count - 1);
     for (NSUInteger i = 0; i < self.tabs.count; i++) {
         if ((NSInteger)i != self.currentIndex) {
-            [self.tabs[i] unload];
+            [(IBWebTab *)self.tabs[i] unload];
         }
     }
 }
