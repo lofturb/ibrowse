@@ -74,6 +74,17 @@ jobs:
           fi
           "$THEOS/toolchain/linux/iphone/bin/clang" --version
 
+      - name: Instalar ldid si el toolchain no lo trae
+        run: |
+          set -euo pipefail
+          BIN="$THEOS/toolchain/linux/iphone/bin"
+          if [ ! -x "$BIN/ldid" ]; then
+            curl -fL --retry 3 -o "$BIN/ldid" \
+              "https://github.com/ProcursusTeam/ldid/releases/download/v2.1.5-procursus7/ldid_linux_x86_64"
+            chmod +x "$BIN/ldid"
+          fi
+          "$BIN/ldid" -h 2>&1 | head -n 3 || true
+
       - name: Instalar SDK de iOS 9.3
         run: |
           set -euo pipefail
@@ -90,13 +101,24 @@ jobs:
 
       # En el SDK 9.3 falta /usr/lib/system/liblaunch.dylib (theos/sdks#10).
       # El SDK 10.3 lo trae y los simbolos son los mismos.
-      - name: Parchear liblaunch.tbd que falta en el SDK 9.3
+      #
+      # Ademas, el SDK 9.3 trae un WebKit.framework vacio (solo .tbd) en
+      # PrivateFrameworks. Theos pone esa ruta -F primero, asi que clang
+      # encontraba ese directorio sin cabeceras y no llegaba al publico.
+      # Se elimina el stub privado: el framework publico tiene tbd y headers.
+      - name: Corregir el SDK 9.3 (liblaunch y WebKit sombreado)
         run: |
           set -euo pipefail
-          DESTINO="$THEOS/sdks/iPhoneOS9.3.sdk/usr/lib/system/liblaunch.tbd"
+          SDK="$THEOS/sdks/iPhoneOS9.3.sdk"
+          DESTINO="$SDK/usr/lib/system/liblaunch.tbd"
           if [ ! -f "$DESTINO" ]; then
             curl -fsSL --retry 3 -o "$DESTINO" \
               "https://raw.githubusercontent.com/theos/sdks/master/iPhoneOS10.3.sdk/usr/lib/system/liblaunch.tbd"
+          fi
+          PRIVADO="$SDK/System/Library/PrivateFrameworks/WebKit.framework"
+          if [ -d "$PRIVADO" ] && [ ! -f "$PRIVADO/Headers/WebKit.h" ]; then
+            rm -rf "$PRIVADO"
+            echo "Eliminado el stub privado de WebKit (sombraba al publico)."
           fi
 
       - name: Generar iconos e imagenes de arranque
