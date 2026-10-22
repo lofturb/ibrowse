@@ -176,6 +176,31 @@
            [path isEqualToString:@"/submit"];
 }
 
++ (BOOL)isPrivateHost:(NSString *)host {
+    if (![host isKindOfClass:[NSString class]] || host.length == 0) {
+        return NO;
+    }
+    NSString *value = [host lowercaseString];
+    if ([value isEqualToString:@"localhost"] ||
+        [value isEqualToString:@"127.0.0.1"] ||
+        [value hasSuffix:@".local"] ||
+        [value hasSuffix:@".lan"] ||
+        [value hasSuffix:@".home"]) {
+        return YES;
+    }
+
+    NSArray *parts = [value componentsSeparatedByString:@"."];
+    if (parts.count == 4) {
+        NSInteger a = [parts[0] integerValue];
+        NSInteger b = [parts[1] integerValue];
+        if (a == 10) { return YES; }
+        if (a == 192 && b == 168) { return YES; }
+        if (a == 172 && b >= 16 && b <= 31) { return YES; }
+        if (a == 169 && b == 254) { return YES; }
+    }
+    return NO;
+}
+
 + (NSString *)displayHostForURL:(NSURL *)url {
     NSString *host = url.host;
     if (!host || host.length == 0) { return url.absoluteString ? url.absoluteString : @""; }

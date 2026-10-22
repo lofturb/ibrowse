@@ -207,9 +207,11 @@
 
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:target
                                                            cachePolicy:NSURLRequestUseProtocolCachePolicy
-                                                       timeoutInterval:90.0];
+                                                       timeoutInterval:30.0];
     [request setValue:settings.userAgentString forHTTPHeaderField:@"User-Agent"];
     [request setValue:@"es-ES,es;q=0.9,en;q=0.8" forHTTPHeaderField:@"Accept-Language"];
+    NSLog(@"[IBrowse] cargar %@ (destino %@)", logicalURL.absoluteString,
+          target.absoluteString);
     [self.webView loadRequest:request];
     [self.delegate webTabDidUpdateURL:self];
 }
@@ -306,7 +308,7 @@
     self.webView.customUserAgent = [[IBSettings sharedSettings] userAgentString];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.requestedURL
                                                            cachePolicy:NSURLRequestUseProtocolCachePolicy
-                                                       timeoutInterval:90.0];
+                                                       timeoutInterval:30.0];
     [request setValue:[[IBSettings sharedSettings] userAgentString]
    forHTTPHeaderField:@"User-Agent"];
     [self.webView loadRequest:request];
@@ -393,12 +395,14 @@
 #pragma mark - WKNavigationDelegate
 
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
+    NSLog(@"[IBrowse] empieza %@", webView.URL.absoluteString);
     self.loading = YES;
     self.progress = 0.0;
     [self.delegate webTabDidStartLoading:self];
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    NSLog(@"[IBrowse] fin %@", webView.URL.absoluteString);
     self.loading = NO;
     self.progress = 1.0;
 
@@ -430,6 +434,27 @@
     [self.delegate webTabDidUpdateTitle:self];
     [self.delegate webTabDidUpdateURL:self];
     [self.delegate webTabDidFinishLoading:self];
+
+    if (!self.isStartPage) {
+        [self logPageDiagnostics];
+    }
+}
+
+- (void)logPageDiagnostics {
+    NSString *source =
+        @"(function(){try{"
+         "var b=document.body,d=document.documentElement;"
+         "return JSON.stringify({"
+         "url:location.href,title:document.title,"
+         "body:(b?b.innerHTML.length:-1),"
+         "text:(b&&b.innerText?b.innerText.length:-1),"
+         "frames:window.frames.length,"
+         "scripts:document.scripts.length,"
+         "ready:document.readyState"
+         "});}catch(e){return 'diag-error: '+e;}})()";
+    [self.webView evaluateJavaScript:source completionHandler:^(id result, NSError *error) {
+        NSLog(@"[IBrowse] diagnostico %@ (error %@)", result, error.localizedDescription);
+    }];
 }
 
 - (void)webView:(WKWebView *)webView
@@ -445,6 +470,8 @@
 }
 
 - (void)handleNavigationError:(NSError *)error {
+    NSLog(@"[IBrowse] fallo %@ %ld %@", error.domain, (long)error.code,
+          error.localizedDescription);
     self.loading = NO;
 
     if ([error.domain isEqualToString:NSURLErrorDomain] &&
@@ -468,6 +495,8 @@
     }
 
     NSString *scheme = [url.scheme lowercaseString];
+    NSLog(@"[IBrowse] accion %@ (%@)", url.absoluteString,
+          navigationAction.targetFrame ? @"marco" : @"nueva ventana");
 
     if ([IBURLNormalizer isStartURL:url]) {
         [self loadStartPage];
@@ -506,6 +535,8 @@
     }
 
     NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+    NSLog(@"[IBrowse] respuesta %@ %ld %@", response.URL.absoluteString,
+          (long)httpResponse.statusCode, response.MIMEType);
     NSString *disposition = [self headerValue:@"Content-Disposition"
                                      response:httpResponse];
     NSString *mime = [response.MIMEType lowercaseString];
@@ -607,6 +638,20 @@
                     completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition,
                                                 NSURLCredential *))completionHandler {
     NSString *method = challenge.protectionSpace.authenticationMethod;
+    NSString *host = challenge.protectionSpace.host ?: @"";
+    NSLog(@"[IBrowse] auth %@ %@", method, host);
+
+    /* Los routers usan certificados propios. En una IP privada aceptamos
+       la cadena para que el panel de administración no quede en blanco. */
+    if ([method isEqualToString:NSURLAuthenticationMethodServerTrust] &&
+        [IBURLNormalizer isPrivateHost:host] &&
+        challenge.protectionSpace.serverTrust != NULL) {
+        NSURLCredential *credential = [NSURLCredential
+            credentialForTrust:challenge.protectionSpace.serverTrust];
+        completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+        return;
+    }
+
     if (![method isEqualToString:NSURLAuthenticationMethodHTTPBasic] &&
         ![method isEqualToString:NSURLAuthenticationMethodHTTPDigest]) {
         completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
@@ -619,7 +664,6 @@
         return;
     }
 
-    NSString *host = challenge.protectionSpace.host ?: @"";
     UIAlertController *alert = [UIAlertController
         alertControllerWithTitle:@"Inicio de sesión"
                          message:host
@@ -776,6 +820,9 @@
         }
     } else if ([type isEqualToString:@"focusAddress"]) {
         [self.delegate webTabDidRequestFocusAddress:self];
+    } else if ([type isEqualToString:@"jserror"]) {
+        NSLog(@"[IBrowse] JS %@ (%@:%@) en %@",
+              body[@"message"], body[@"source"], body[@"line"], body[@"page"]);
     }
 }
 

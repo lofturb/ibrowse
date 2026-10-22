@@ -33,6 +33,18 @@
         return /^(mailto:|tel:|sms:|itms-apps:|itms-services:|facetime:|maps:)/i.test(url);
     }
 
+    /* Errores de JavaScript de la página: se registran en el log del iPad.
+       Sin esto, una página en blanco no da ninguna pista. */
+    window.addEventListener('error', function (ev) {
+        post({
+            type: 'jserror',
+            message: String(ev.message || ''),
+            source: String(ev.filename || ''),
+            line: ev.lineno || 0,
+            page: String(location.href || '')
+        });
+    }, true);
+
     /* Enlaces de descarga: el WKWebView de iOS 9 no descarga por su cuenta. */
     document.addEventListener('click', function (ev) {
         if (ev.defaultPrevented || ev.button !== 0 ||

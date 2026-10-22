@@ -1105,10 +1105,29 @@ static const CGFloat IBKButtonWidth = 42.0;
     if (message.length == 0) {
         message = @"No se pudo conectar con el servidor.";
     }
-    NSString *hint = @"Comprueba la conexión. Si la web usa JavaScript moderno, "
-                      "activa el Modo Relay en Ajustes.";
+
+    NSString *hint = @"Comprueba la conexión y que la dirección sea correcta.";
+    if ([error.domain isEqualToString:NSURLErrorDomain]) {
+        if (error.code == NSURLErrorTimedOut) {
+            hint = @"El servidor no respondió en 30 segundos. "
+                    "Comprueba que la web del router esté activada.";
+        } else if (error.code == NSURLErrorCannotConnectToHost ||
+                   error.code == NSURLErrorNetworkConnectionLost ||
+                   error.code == NSURLErrorNotConnectedToInternet) {
+            hint = @"No hay conexión con ese servidor. Revisa el WiFi "
+                    "y que la IP sea la del router.";
+        } else if (error.code == NSURLErrorServerCertificateUntrusted ||
+                   error.code == NSURLErrorSecureConnectionFailed) {
+            hint = @"El certificado del router no es válido. Prueba con "
+                    "http:// delante de la dirección.";
+        }
+    }
+
+    NSString *detail = [NSString stringWithFormat:@"\n\n(%@ %ld)",
+                        error.domain, (long)error.code];
     [self.errorView showWithTitle:@"No se pudo cargar la página"
-                          message:[NSString stringWithFormat:@"%@\n\n%@", message, hint]];
+                          message:[NSString stringWithFormat:@"%@\n\n%@%@",
+                                   message, hint, detail]];
     self.progressView.hidden = YES;
     [self updateReloadButton];
 }

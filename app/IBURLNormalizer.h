@@ -12,6 +12,7 @@
 + (NSString *)relayWrappedURLString:(NSURL *)url baseURL:(NSString *)baseURL;
 + (NSURL *)originalURLFromRelayURL:(NSURL *)url baseURL:(NSString *)baseURL;
 + (BOOL)isRelayURL:(NSURL *)url baseURL:(NSString *)baseURL;
++ (BOOL)isPrivateHost:(NSString *)host;
 
 + (NSString *)encodedQuery:(NSString *)query;
 + (NSString *)displayHostForURL:(NSURL *)url;
