@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="format-detection" content="telephone=no">
+<title>Instalar IBrowse</title>
+<style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+        font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: #0a1020;
+        background: -webkit-linear-gradient(top, #0a1020 0%, #0d1a30 55%, #102542 100%);
+        background: linear-gradient(180deg, #0a1020 0%, #0d1a30 55%, #102542 100%);
+        color: #fff;
+        min-height: 100vh;
+        padding: 40px 20px 56px;
+        -webkit-text-size-adjust: 100%;
+    }
+    .wrap { max-width: 640px; margin: 0 auto; }
+    .logo { width: 84px; height: 84px; display: block; margin: 0 auto 18px; }
+    h1 { margin: 0; text-align: center; font-size: 36px; letter-spacing: -1px; }
+    h1 span { color: #7fb2ff; }
+    .sub { margin: 10px auto 0; text-align: center; color: rgba(226,236,255,.62);
+           font-size: 15px; line-height: 1.5; max-width: 460px; }
+    .card {
+        margin: 34px auto 0;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 18px;
+        padding: 22px;
+    }
+    .download {
+        display: block; text-align: center; text-decoration: none;
+        background: #1b6ef3;
+        background: -webkit-linear-gradient(top, #2f86ff, #1357e0);
+        background: linear-gradient(180deg, #2f86ff, #1357e0);
+        color: #fff; font-size: 17px; font-weight: 600;
+        padding: 15px 20px; border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(20,90,255,.35);
+    }
+    .download:active { opacity: .82; }
+    .size { text-align: center; font-size: 11px; color: rgba(210,224,255,.42); margin-top: 10px; }
+    h2 { font-size: 12px; letter-spacing: 1.6px; text-transform: uppercase;
+         color: rgba(204,220,255,.46); margin: 30px 0 12px; font-weight: 600; }
+    ol { margin: 0; padding-left: 22px; color: rgba(226,236,255,.78);
+         font-size: 14px; line-height: 1.65; }
+    ol li { margin-bottom: 8px; }
+    code {
+        background: rgba(255,255,255,.08); padding: 2px 6px; border-radius: 5px;
+        font-family: Menlo, Consolas, monospace; font-size: 12px;
+        color: #cfe0ff; word-break: break-all;
+    }
+    .note { margin-top: 18px; padding: 14px 16px; border-radius: 12px;
+            background: rgba(255,190,90,.08); border: 1px solid rgba(255,190,90,.20);
+            color: rgba(255,224,180,.82); font-size: 12.5px; line-height: 1.55; }
+    .foot { margin-top: 36px; text-align: center; font-size: 11px;
+            line-height: 1.7; color: rgba(200,216,250,.36); }
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+           background: #35d0a5; margin-right: 5px; vertical-align: 1px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+            <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="1" stop-color="#8bb8ff"/>
+            </linearGradient>
+            <linearGradient id="needle" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="1" stop-color="#4f9bff"/>
+            </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="35" fill="none" stroke="url(#ring)" stroke-width="4"/>
+        <circle cx="50" cy="50" r="27" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+        <polygon points="50,22 61,50 50,78 39,50" fill="url(#needle)"/>
+        <polygon points="50,22 50,50 39,50" fill="rgba(255,255,255,.28)"/>
+        <circle cx="50" cy="50" r="4.5" fill="#0a1020"/>
+        <circle cx="50" cy="50" r="2.5" fill="#ffffff"/>
+    </svg>
+
+    <h1>I<span>Browse</span></h1>
+    <p class="sub">Instalación para iPad mini 1 / iOS 9.3.6.<br>
+       Coloca <code>IBrowse.ipa</code> en esta carpeta antes de descargar.</p>
+
+    <div class="card">
+        <a class="download" href="IBrowse.ipa">Descargar IBrowse.ipa</a>
+        <div class="size">Si el enlace da error 404, el archivo aún no está en la carpeta.</div>
+
+        <h2>En el iPad</h2>
+        <ol>
+            <li>Abre esta página en <b>Safari</b> del iPad (misma WiFi que el PC).</li>
+            <li>Pulsa <b>Descargar IBrowse.ipa</b> y confirma.</li>
+            <li>Abre el archivo desde Descargas o Filza y elige <b>Instalar</b>.</li>
+            <li>Si iOS lo pide, confía en el desarrollador o usa AppSync Unified.</li>
+        </ol>
+
+        <h2>Desde el PC (con cable)</h2>
+        <ol>
+            <li>Instala <code>ideviceinstaller</code> (libimobiledevice).</li>
+            <li>Conecta el iPad y ejecuta:</li>
+        </ol>
+        <p><code>ideviceinstaller -i IBrowse.ipa</code></p>
+
+        <div class="note">
+            IBrowse se firma con <b>ldid</b>, no con un certificado de Apple.
+            Necesitas jailbreak y <b>AppSync Unified</b>. No se instala en un
+            iPad sin jailbreak.
+        </div>
+    </div>
+
+    <div class="foot">
+        <span class="dot"></span>IBrowse 1.0.0 · WebKit iOS 9 · armv7<br>
+        Sin telemetría. El Modo Relay es opcional y se ejecuta en tu PC.
+    </div>
+</div>
+</body>
+</html>

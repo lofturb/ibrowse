@@ -1,0 +1,172 @@
+name: Construir IPA (IBrowse / iOS 9 armv7)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  THEOS: ${{ github.workspace }}/theos
+  APP_DIR: app
+  APP_NAME: IBrowse
+  # Toolchain LLVM 11.1.0-L3 de L1ghtmann: compila armv7 contra el SDK 9.3.
+  TOOLCHAIN_TAG: test-210562a
+  TOOLCHAIN_ASSET: iOSToolchain-x86_64.tar.xz
+
+permissions:
+  contents: write
+
+jobs:
+  build-ipa:
+    # Ubuntu 22.04 (glibc 2.35) encaja con el toolchain de 2023 y tiene
+    # libtinfo5, que algunos binarios necesitan.
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Comprobar fuentes, metadatos y recursos
+        run: |
+          set -euo pipefail
+          python3 tools/comprobar_fuentes.py
+          python3 tools/verificar_recursos.py
+
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential fakeroot rsync curl perl zip unzip git \
+            libxml2 xz-utils libz3-dev libtinfo6 nodejs
+          sudo apt-get install -y libtinfo5 || echo "libtinfo5 no disponible (no es critico)"
+          sudo update-alternatives --set fakeroot /usr/bin/fakeroot-sysv || true
+
+      - name: Comprobar sintaxis JavaScript
+        run: |
+          set -euo pipefail
+          node --version
+          for archivo in "$APP_DIR"/Resources/*.js; do
+            echo "  node --check $archivo"
+            node --check "$archivo"
+          done
+          python3 tools/extraer_js_inline.py > /tmp/start-inline.js
+          node --check /tmp/start-inline.js
+
+      - name: Cachear Theos (toolchain + SDK)
+        uses: actions/cache@v4
+        with:
+          path: theos
+          key: theos-${{ runner.os }}-${{ env.TOOLCHAIN_TAG }}-sdk9.3-v2
+
+      - name: Instalar Theos + toolchain LLVM (armv7)
+        run: |
+          set -euo pipefail
+          if [ ! -x "$THEOS/toolchain/linux/iphone/bin/clang" ]; then
+            if [ ! -d "$THEOS/.git" ]; then
+              git clone --recursive --depth 1 https://github.com/theos/theos.git "$THEOS"
+            else
+              git -C "$THEOS" submodule update --init --recursive --depth 1 || true
+            fi
+            mkdir -p "$THEOS/toolchain" "$THEOS/sdks"
+            curl -fL --retry 3 -o /tmp/iOSToolchain.tar.xz \
+              "https://github.com/L1ghtmann/llvm-project/releases/download/${TOOLCHAIN_TAG}/${TOOLCHAIN_ASSET}"
+            tar -xJf /tmp/iOSToolchain.tar.xz -C "$THEOS/toolchain/"
+            rm -f /tmp/iOSToolchain.tar.xz
+          fi
+          "$THEOS/toolchain/linux/iphone/bin/clang" --version
+
+      - name: Instalar SDK de iOS 9.3
+        run: |
+          set -euo pipefail
+          if [ ! -d "$THEOS/sdks/iPhoneOS9.3.sdk" ]; then
+            mkdir -p "$THEOS/sdks"
+            rm -rf /tmp/theos-sdks
+            git clone --depth 1 --filter=blob:none --sparse \
+              https://github.com/theos/sdks.git /tmp/theos-sdks
+            git -C /tmp/theos-sdks sparse-checkout set iPhoneOS9.3.sdk
+            cp -a /tmp/theos-sdks/iPhoneOS9.3.sdk "$THEOS/sdks/"
+            rm -rf /tmp/theos-sdks
+          fi
+          ls -d "$THEOS/sdks/"*.sdk
+
+      # En el SDK 9.3 falta /usr/lib/system/liblaunch.dylib (theos/sdks#10).
+      # El SDK 10.3 lo trae y los simbolos son los mismos.
+      - name: Parchear liblaunch.tbd que falta en el SDK 9.3
+        run: |
+          set -euo pipefail
+          DESTINO="$THEOS/sdks/iPhoneOS9.3.sdk/usr/lib/system/liblaunch.tbd"
+          if [ ! -f "$DESTINO" ]; then
+            curl -fsSL --retry 3 -o "$DESTINO" \
+              "https://raw.githubusercontent.com/theos/sdks/master/iPhoneOS10.3.sdk/usr/lib/system/liblaunch.tbd"
+          fi
+
+      - name: Generar iconos e imagenes de arranque
+        run: |
+          set -euo pipefail
+          python3 tools/generar_recursos.py
+          ls -la "$APP_DIR/Resources/" | head -n 30
+
+      - name: Compilar la app y empaquetar el .ipa
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -euo pipefail
+          make clean || true
+          make package FINALPACKAGE=1 PACKAGE_FORMAT=ipa
+
+      - name: Verificar que el binario es armv7 para iOS 9
+        run: |
+          set -euo pipefail
+          BIN=$(find "$GITHUB_WORKSPACE/$APP_DIR/.theos" -type f -name "$APP_NAME" | head -n 1)
+          if [ -z "$BIN" ]; then echo "No se encontro el binario $APP_NAME"; exit 1; fi
+          echo "Binario: $BIN"
+          file "$BIN"
+          "$THEOS/toolchain/linux/iphone/bin/otool" -hv "$BIN" || true
+          echo "--- contenido del paquete ---"
+          ls -la "$GITHUB_WORKSPACE/$APP_DIR/packages/"
+
+      - name: Comprobar la estructura del IPA
+        run: |
+          set -euo pipefail
+          IPA=$(ls "$GITHUB_WORKSPACE/$APP_DIR/packages/"*.ipa | head -n 1)
+          echo "IPA: $IPA"
+          unzip -l "$IPA" | head -n 50
+          unzip -l "$IPA" | grep -q "Payload/$APP_NAME.app/$APP_NAME" \
+            || { echo "El IPA no contiene el ejecutable esperado"; exit 1; }
+          unzip -l "$IPA" | grep -q "Payload/$APP_NAME.app/Info.plist" \
+            || { echo "El IPA no contiene Info.plist"; exit 1; }
+          unzip -l "$IPA" | grep -q "Payload/$APP_NAME.app/start.html" \
+            || { echo "El IPA no contiene start.html"; exit 1; }
+          unzip -l "$IPA" | grep -q "Payload/$APP_NAME.app/ibrowse-polyfills.js" \
+            || { echo "El IPA no contiene los polyfills"; exit 1; }
+
+      - name: Comprobar los entitlements
+        run: |
+          set -euo pipefail
+          BIN=$(find "$GITHUB_WORKSPACE/$APP_DIR/.theos" -type f -name "$APP_NAME" | head -n 1)
+          LDID=$(find "$THEOS" -type f -name 'ldid' | head -n 1)
+          echo "ldid: $LDID"
+          if [ -n "$LDID" ]; then
+            "$LDID" -e "$BIN" || echo "(no se pudieron leer los entitlements)"
+          else
+            echo "(ldid no encontrado; se omite la comprobacion)"
+          fi
+
+      - name: Publicar el IPA como artefacto descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-ipa-armv7
+          path: ${{ env.APP_DIR }}/packages/*.ipa
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publicar tambien como Release
+        if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ETIQUETA="build-$(date -u +%Y%m%d-%H%M%S)"
+          gh release create "$ETIQUETA" ${APP_DIR}/packages/*.ipa \
+            --title "IBrowse $ETIQUETA" \
+            --notes-file .github/notas-release.md \
+            --latest \
+            || echo "No se pudo crear el Release (el IPA sigue en Artefactos)"

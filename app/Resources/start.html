@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="format-detection" content="telephone=no">
+<title>IBrowse</title>
+<style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+        font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: #0a1020;
+        background: -webkit-linear-gradient(top, #0a1020 0%, #0d1a30 55%, #102542 100%);
+        background: linear-gradient(180deg, #0a1020 0%, #0d1a30 55%, #102542 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        overflow-x: hidden;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    .glow {
+        position: fixed;
+        width: 560px;
+        height: 560px;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: .55;
+    }
+    .glow.one {
+        top: -260px;
+        left: 50%;
+        margin-left: -280px;
+        background: -webkit-radial-gradient(circle, rgba(45,120,255,.42) 0%, rgba(45,120,255,0) 68%);
+        background: radial-gradient(circle, rgba(45,120,255,.42) 0%, rgba(45,120,255,0) 68%);
+    }
+    .glow.two {
+        bottom: -320px;
+        right: -160px;
+        background: -webkit-radial-gradient(circle, rgba(0,210,190,.20) 0%, rgba(0,210,190,0) 70%);
+        background: radial-gradient(circle, rgba(0,210,190,.20) 0%, rgba(0,210,190,0) 70%);
+    }
+    .wrap {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 54px 26px 40px;
+        text-align: center;
+    }
+    .logo {
+        width: 84px;
+        height: 84px;
+        margin: 0 auto 18px;
+        display: block;
+        -webkit-filter: drop-shadow(0 12px 28px rgba(20,90,255,.45));
+        filter: drop-shadow(0 12px 28px rgba(20,90,255,.45));
+    }
+    h1 {
+        margin: 0;
+        font-size: 40px;
+        line-height: 1.05;
+        font-weight: 700;
+        letter-spacing: -1.2px;
+    }
+    h1 span { color: #7fb2ff; }
+    .tagline {
+        margin: 10px auto 0;
+        max-width: 480px;
+        font-size: 15px;
+        line-height: 1.45;
+        color: rgba(226,236,255,.66);
+    }
+    .search {
+        margin: 34px auto 0;
+        max-width: 600px;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 7px;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-align-items: center;
+        align-items: center;
+        box-shadow: 0 18px 50px rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.10);
+    }
+    .search input {
+        -webkit-appearance: none;
+        appearance: none;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        -webkit-flex: 1;
+        flex: 1;
+        min-width: 0;
+        height: 46px;
+        padding: 0 14px;
+        font-size: 17px;
+        color: #101828;
+        font-family: inherit;
+    }
+    .search input::-webkit-input-placeholder { color: #8a94a6; }
+    .search button {
+        -webkit-appearance: none;
+        appearance: none;
+        border: 0;
+        outline: 0;
+        width: 46px;
+        height: 46px;
+        border-radius: 11px;
+        background: #1b6ef3;
+        background: -webkit-linear-gradient(top, #2f86ff, #1357e0);
+        background: linear-gradient(180deg, #2f86ff, #1357e0);
+        color: #fff;
+        font-size: 22px;
+        line-height: 46px;
+        text-align: center;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    .search button:active { opacity: .78; }
+    .hint {
+        margin: 12px auto 0;
+        font-size: 12px;
+        color: rgba(210,224,255,.42);
+    }
+    .hint b { color: rgba(210,224,255,.68); font-weight: 600; }
+    .section-title {
+        margin: 38px 0 14px;
+        font-size: 11px;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: rgba(204,220,255,.42);
+        font-weight: 600;
+    }
+    .links {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+        -webkit-justify-content: center;
+        justify-content: center;
+        margin: 0 -6px;
+    }
+    .link {
+        display: block;
+        width: 31%;
+        min-width: 180px;
+        margin: 6px;
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,.055);
+        border: 1px solid rgba(255,255,255,.075);
+        text-align: left;
+        text-decoration: none;
+        color: #fff;
+        cursor: pointer;
+        -webkit-transition: background .15s ease, border-color .15s ease;
+        transition: background .15s ease, border-color .15s ease;
+    }
+    .link:active {
+        background: rgba(70,140,255,.18);
+        border-color: rgba(110,170,255,.36);
+    }
+    .link .badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        line-height: 34px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #fff;
+    }
+    .link .name {
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .link .host {
+        margin-top: 3px;
+        font-size: 11px;
+        color: rgba(210,224,255,.45);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .b-blue { background: #1b6ef3; }
+    .b-teal { background: #0c9b8e; }
+    .b-violet { background: #6c5ce7; }
+    .b-orange { background: #d97706; }
+    .b-slate { background: #334155; }
+    .b-rose { background: #be3a6b; }
+    .foot {
+        margin: 40px auto 0;
+        font-size: 11px;
+        line-height: 1.7;
+        color: rgba(200,216,250,.36);
+    }
+    .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #35d0a5;
+        margin-right: 5px;
+        vertical-align: 1px;
+    }
+    @media (max-width: 620px) {
+        .wrap { padding: 34px 18px 30px; }
+        h1 { font-size: 32px; }
+        .logo { width: 66px; height: 66px; }
+        .link { width: 46%; min-width: 0; padding: 12px; }
+        .link .badge { width: 30px; height: 30px; line-height: 30px; font-size: 13px; }
+        .section-title { margin-top: 30px; }
+    }
+</style>
+</head>
+<body>
+<div class="glow one"></div>
+<div class="glow two"></div>
+
+<div class="wrap">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+            <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="1" stop-color="#8bb8ff"/>
+            </linearGradient>
+            <linearGradient id="needle" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="1" stop-color="#4f9bff"/>
+            </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="35" fill="none" stroke="url(#ring)" stroke-width="4"/>
+        <circle cx="50" cy="50" r="27" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+        <polygon points="50,22 61,50 50,78 39,50" fill="url(#needle)"/>
+        <polygon points="50,22 50,50 39,50" fill="rgba(255,255,255,.28)"/>
+        <circle cx="50" cy="50" r="4.5" fill="#0a1020"/>
+        <circle cx="50" cy="50" r="2.5" fill="#ffffff"/>
+    </svg>
+
+    <h1>I<span>Browse</span></h1>
+    <p class="tagline">Un navegador pensado para el iPad mini 1.<br>
+       Web moderna, con los pies en iOS 9.</p>
+
+    <form class="search" id="search-form" action="#" method="get">
+        <input id="q" type="search" name="q" placeholder="Busca o escribe una dirección"
+               autocomplete="off" autocapitalize="off" autocorrect="off"
+               spellcheck="false" inputmode="search">
+        <button type="submit" aria-label="Buscar">&#8594;</button>
+    </form>
+    <p class="hint">Consejo: si una web no carga, prueba el <b>Modo Relay</b> en Ajustes.</p>
+
+    <div class="section-title">Accesos rápidos</div>
+    <div class="links">
+        <a class="link" href="#" data-url="https://es.wikipedia.org/">
+            <div class="badge b-slate">W</div>
+            <div class="name">Wikipedia</div>
+            <div class="host">es.wikipedia.org</div>
+        </a>
+        <a class="link" href="#" data-url="https://html.duckduckgo.com/html/">
+            <div class="badge b-orange">D</div>
+            <div class="name">DuckDuckGo</div>
+            <div class="host">html.duckduckgo.com</div>
+        </a>
+        <a class="link" href="#" data-url="https://archive.org/">
+            <div class="badge b-teal">A</div>
+            <div class="name">Internet Archive</div>
+            <div class="host">archive.org</div>
+        </a>
+        <a class="link" href="#" data-url="https://news.ycombinator.com/">
+            <div class="badge b-orange">Y</div>
+            <div class="name">Hacker News</div>
+            <div class="host">news.ycombinator.com</div>
+        </a>
+        <a class="link" href="#" data-url="https://github.com/">
+            <div class="badge b-violet">G</div>
+            <div class="name">GitHub</div>
+            <div class="host">github.com</div>
+        </a>
+        <a class="link" href="#" data-url="https://www.bbc.com/mundo">
+            <div class="badge b-rose">B</div>
+            <div class="name">BBC Mundo</div>
+            <div class="host">bbc.com/mundo</div>
+        </a>
+    </div>
+
+    <div class="foot">
+        <span class="dot"></span>IBrowse 1.0.0 &middot; WebKit iOS 9 &middot; armv7<br>
+        Sin telemetría. Tus datos se quedan en el iPad.
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+    function post(obj) {
+        try {
+            window.webkit.messageHandlers.ibrowse.postMessage(obj);
+        } catch (e) {
+            if (window.__IB_START) { window.__IB_START.focusAddress(); }
+        }
+    }
+    var form = document.getElementById('search-form');
+    var input = document.getElementById('q');
+    form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var q = input.value.replace(/^\s+|\s+$/g, '');
+        if (q) { post({ type: 'search', q: q }); }
+    });
+    var links = document.querySelectorAll('[data-url]');
+    for (var i = 0; i < links.length; i++) {
+        links[i].addEventListener('click', function (ev) {
+            ev.preventDefault();
+            post({ type: 'navigate', url: this.getAttribute('data-url') });
+        });
+    }
+    /* Evita el zoom automático al enfocar en iOS. */
+    input.addEventListener('focus', function () {
+        document.body.scrollTop = 0;
+    });
+})();
+</script>
+</body>
+</html>

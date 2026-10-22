@@ -1,0 +1,9 @@
+Package: com.lofturb.ibrowse
+Name: IBrowse
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Navegador ligero y privado para iPad mini 1 / iOS 9 (armv7), con compatibilidad web y relay opcional.
+Homepage: https://github.com/lofturb/ibrowse
+Maintainer: lofturb
+Author: lofturb
+Section: Applications

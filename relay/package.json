@@ -1,0 +1,18 @@
+{
+  "name": "ibrowse-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Relay local para IBrowse: adapta JavaScript moderno y reescribe HTML/CSS para el WebKit de iOS 9.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "RELAY_VERBOSE=1 node server.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "cheerio": "1.0.0-rc.12",
+    "esbuild": "^0.23.1"
+  }
+}

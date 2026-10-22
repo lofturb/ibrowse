@@ -1,0 +1,23 @@
+# Theos / build
+.theos/
+packages/
+dist/
+*.ipa
+*.deb
+*.dSYM/
+*.tar.xz
+
+# Python
+__pycache__/
+*.pyc
+
+# Relay
+relay/node_modules/
+relay/.cache/
+npm-debug.log*
+
+# Entorno
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
